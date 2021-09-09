@@ -35,7 +35,6 @@
 *.exe
 *.out
 *.app
-starter_files/spiral_planner
 
 ### CMake ###
 CMakeLists.txt.user
@@ -70,4 +69,9 @@ _deps
 .history
 .ionide
 
+
 # End of https://www.toptal.com/developers/gitignore/api/c++,cmake,visualstudiocode
+
+
+build/
+starter_files/spiral_planner
