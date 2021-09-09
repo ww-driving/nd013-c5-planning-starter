@@ -84,37 +84,35 @@ std::vector<State> MotionPlanner::generate_offset_goals(
 
   // TODO-Perpendicular direction: ADD pi/2 to the goal yaw
   // (goal_state.rotation.yaw)
-  //auto yaw = ;  // <- Fix This
+  auto yaw = utils::keep_angle_range_rad(goal_state.rotation.yaw + M_PI_2, -M_PI, M_PI);  // <- Fix This
 
-  // LOG(INFO) << "MAIN GOAL";
-  // LOG(INFO) << "x: " << goal_state.location.x << " y: " <<
-  // goal_state.location.y
-  //          << " z: " << goal_state.location.z
-  //          << " yaw (rad): " << goal_state.rotation.yaw;
-  // LOG(INFO) << "OFFSET GOALS";
-  // LOG(INFO) << "ALL offset yaw (rad): " << yaw;
+  LOG(INFO) << "MAIN GOAL";
+  LOG(INFO) << "x: " << goal_state.location.x << " y: " <<
+  goal_state.location.y
+           << " z: " << goal_state.location.z
+           << " yaw (rad): " << goal_state.rotation.yaw;
+  LOG(INFO) << "OFFSET GOALS";
+  LOG(INFO) << "ALL offset yaw (rad): " << yaw;
 
   for (int i = 0; i < _num_paths; ++i) {
     auto goal_offset = goal_state;
     float offset = (i - (int)(_num_paths / 2)) * _goal_offset;
-    // LOG(INFO) << "Goal: " << i + 1;
-    // LOG(INFO) << "(int)(_num_paths / 2): " << (int)(_num_paths / 2);
-    // LOG(INFO) << "(i - (int)(_num_paths / 2)): " << (i - (int)(_num_paths /
-    // 2)); LOG(INFO) << "_goal_offset: " << _goal_offset;
-
-    // LOG(INFO) << "offset: " << offset;
+    LOG(INFO) << "Goal: " << i + 1;
+    LOG(INFO) << "(int)(_num_paths / 2): " << (int)(_num_paths / 2);
+    LOG(INFO) << "(i - (int)(_num_paths / 2)): " << (i - (int)(_num_paths / 2)); LOG(INFO) << "_goal_offset: " << _goal_offset;
+    LOG(INFO) << "offset: " << offset;
 
     // TODO-offset goal location: calculate the x and y position of the offset
     // goals using "offset" (calculated above) and knowing that the goals should
     // lie on a perpendicular line to the direction (yaw) of the main goal. You
     // calculated this direction above (yaw_plus_90). HINT: use
     // std::cos(yaw_plus_90) and std::sin(yaw_plus_90)
-    // goal_offset.location.x += ;  // <- Fix This
-    // goal_offset.location.y += ;  // <- Fix This
-    // LOG(INFO) << "x: " << goal_offset.location.x
-    //          << " y: " << goal_offset.location.y
-    //          << " z: " << goal_offset.location.z
-    //          << " yaw (rad): " << goal_offset.rotation.yaw;
+    goal_offset.location.x += offset * cos(yaw);  // <- Fix This
+    goal_offset.location.y += offset * sin(yaw);  // <- Fix This
+    LOG(INFO) << "x: " << goal_offset.location.x
+             << " y: " << goal_offset.location.y
+             << " z: " << goal_offset.location.z
+             << " yaw (rad): " << goal_offset.rotation.yaw;
 
     if (valid_goal(goal_state, goal_offset)) {
       goals_offset.push_back(goal_offset);
@@ -126,16 +124,16 @@ std::vector<State> MotionPlanner::generate_offset_goals(
 bool MotionPlanner::valid_goal(const State& main_goal,
                                const State& offset_goal) {
   auto max_offset = ((int)(_num_paths / 2) + 1) * _goal_offset;
-  // LOG(INFO) << "max offset: " << max_offset;
+  LOG(INFO) << "max offset: " << max_offset;
   auto dist = utils::magnitude(main_goal.location - offset_goal.location);
-  // LOG(INFO) << "distance from main goal to offset goal: " << dist;
+  LOG(INFO) << "distance from main goal to offset goal: " << dist;
   return dist < max_offset;
 }
 
 std::vector<int> MotionPlanner::get_best_spiral_idx(
     const std::vector<std::vector<PathPoint>>& spirals,
     const std::vector<State>& obstacles, const State& goal_state) {
-  // LOG(INFO) << "Num Spirals: " << spirals.size();
+  LOG(INFO) << "Num Spirals: " << spirals.size();
   double best_cost = DBL_MAX;
   std::vector<int> collisions;
   int best_spiral_idx = -1;
@@ -211,13 +209,13 @@ std::vector<std::vector<PathPoint>> MotionPlanner::generate_spirals(
       std::vector<PathPoint>* spiral = new std::vector<PathPoint>;
       auto ok = _cubic_spiral.GetSampledSpiral(P_NUM_POINTS_IN_SPIRAL, spiral);
       if (ok && valid_spiral(*spiral, goal)) {
-        // LOG(INFO) << "Spiral Valid ";
+        LOG(INFO) << "Spiral Valid ";
         spirals.push_back(*spiral);
       } else {
-        // LOG(INFO) << "Spiral Invalid ";
+        LOG(INFO) << "Spiral Invalid ";
       }
     } else {
-      // LOG(INFO) << "Spiral Generation FAILED! ";
+      LOG(INFO) << "Spiral Generation FAILED! ";
     }
   }
   return spirals;
@@ -231,20 +229,20 @@ bool MotionPlanner::valid_spiral(const std::vector<PathPoint>& spiral,
   auto dist = std::sqrt((delta_x * delta_x) + (delta_y * delta_y));
   // auto dist = utils::magnitude(spiral[spiral.size() - 1].location -
   //                              offset_goal.location);
-  // LOG(INFO) << "Distance from Spiral end to offset_goal: " << dist;
+  LOG(INFO) << "Distance from Spiral end to offset_goal: " << dist;
   return (dist < 0.1);
 }
 
 float MotionPlanner::calculate_cost(const std::vector<PathPoint>& spiral,
                                     const std::vector<State>& obstacles,
                                     const State& goal) {
-  // LOG(INFO) << "Starting spiral cost calc";
+  LOG(INFO) << "Starting spiral cost calc";
   // Initialize cost to 0.0
   float cost = 0.0;
   cost += cf::collision_circles_cost_spiral(spiral, obstacles);
 
   cost += cf::close_to_main_goal_cost_spiral(spiral, goal);
 
-  // LOG(INFO) << "Path Cost: " << cost;
+  LOG(INFO) << "Path Cost: " << cost;
   return cost;
 }
